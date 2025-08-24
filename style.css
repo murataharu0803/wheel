@@ -3,7 +3,41 @@ body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
     background-color: #f0f2f5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden;
 }
+.borderless-window { -webkit-app-region: drag; background-color: transparent !important; }
 .app-container { display: flex; gap: 30px; align-items: flex-start; padding: 20px; }
+.borderless-window .spin-button, .borderless-window #countdown-display { -webkit-app-region: no-drag; }
+
+/* ★★★ 全新美化：主控台的視窗控制按鈕樣式 ★★★ */
+.window-controls {
+    display: grid; /* 使用 grid 佈局 */
+    grid-template-columns: 1fr 1fr; /* 兩列，均分寬度 */
+    gap: 10px;
+    margin-bottom: 20px;
+    border-bottom: 1px solid #ecf0f1;
+    padding-bottom: 15px;
+}
+.window-controls button {
+    padding: 10px;
+    font-size: 16px;
+    font-weight: 500;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    color: white;
+}
+#show-turntable-btn {
+    background-color: #3498db; /* 藍色 */
+}
+#show-turntable-btn:hover {
+    background-color: #2980b9;
+}
+#show-timer-btn {
+    background-color: #9b59b6; /* 紫色 */
+}
+#show-timer-btn:hover {
+    background-color: #8e44ad;
+}
 
 /* 轉盤區 */
 .wheel-container { position: relative; width: 500px; height: 500px; }
@@ -14,47 +48,31 @@ body {
 .spin-button:active { transform: translate(-50%, -50%) scale(0.95); }
 
 /* 選項區 */
-.options-container { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 420px; max-height: 90vh; display: flex; flex-direction: column; }
+.options-container { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 460px; max-height: 90vh; display: flex; flex-direction: column; }
 .options-container h2 { margin-top: 0; text-align: center; color: #2c3e50; }
 #options-list { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 5px; }
 
 .option-row { display: flex; align-items: center; gap: 5px; margin-bottom: 8px; }
-.option-row input[type="text"] { flex-grow: 1; padding: 8px; border: 1px solid #bdc3c7; border-radius: 4px; font-size: 14px; }
-.option-row input[type="number"] { width: 45px; padding: 8px; border: 1px solid #bdc3c7; border-radius: 4px; text-align: center; }
-.option-row input[type=number]::-webkit-inner-spin-button, 
-.option-row input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.option-row input[type="text"] { flex-grow: 1; padding: 8px; border: 1px solid #bdc3c7; border-radius: 4px; font-size: 14px; min-width: 50px; }
+.option-row input[type="number"] { width: 45px; padding: 8px; border: 1px solid #bdc3c7; border-radius: 4px; text-align: center; flex-shrink: 0; }
+.option-row input[type=number]::-webkit-inner-spin-button, .option-row input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
 .option-row input[type=number] { -moz-appearance: textfield; }
-.option-percentage { width: 50px; text-align: right; font-size: 13px; color: #7f8c8d; padding-right: 5px; }
-.option-row input[type="color"] { -webkit-appearance: none; width: 36px; height: 36px; border: 1px solid #bdc3c7; border-radius: 4px; cursor: pointer; flex-shrink: 0; padding: 0; background-color: transparent; }
+.option-percentage { width: 50px; text-align: right; font-size: 13px; color: #7f8c8d; padding-right: 5px; flex-shrink: 0; }
+.option-row input[type="color"] { -webkit-appearance: none; width: 36px; height: 36px; border: 1px solid #bdc3c7; border-radius: 4px; cursor: pointer; padding: 0; background-color: transparent; flex-shrink: 0; }
 .option-row input[type="color"]::-webkit-color-swatch-wrapper { padding: 2px; }
 .option-row input[type="color"]::-webkit-color-swatch { border: none; border-radius: 3px; }
-.option-row .remove-btn { background: none; border: none; color: #e74c3c; font-size: 20px; cursor: pointer; padding: 5px; }
+.option-row .remove-btn { background: none; border: none; color: #e74c3c; font-size: 20px; cursor: pointer; padding: 5px; flex-shrink: 0; }
 
 /* 選項內的計時器輸入框樣式 */
-.timer-inputs { display: flex; gap: 2px; align-items: center; position: relative; }
+.timer-inputs { display: flex; gap: 2px; align-items: center; position: relative; flex-shrink: 0; }
 .timer-inputs::before { content: '|'; color: #bdc3c7; margin: 0 4px; }
 .timer-inputs input { width: 35px !important; font-size: 12px; padding: 8px 4px !important; text-align: center; }
 
-/* ★★★ 新增：用偽元素在輸入框之間插入 ":" ★★★ */
-.timer-inputs input:not(:first-child) {
-    margin-left: 8px; /* 為 ":" 留出空間 */
-}
-.timer-inputs input:not(:first-child)::before {
-    content: ":";
-    position: absolute;
-    left: -6px; /* 調整 ":" 的精確位置 */
-    color: #2c3e50;
-    font-weight: bold;
-}
-/* 針對第二個輸入框 (分鐘) 的 ":" 定位 */
-.timer-inputs input.option-m-input::before {
-    left: 40px;
-}
-/* 針對第三個輸入框 (秒) 的 ":" 定位 */
-.timer-inputs input.option-s-input::before {
-    left: 85px;
-}
-
+/* 用偽元素在輸入框之間插入 ":" */
+.timer-inputs input:not(:first-child) { margin-left: 8px; }
+.timer-inputs input:not(:first-child)::before { content: ":"; position: absolute; left: -6px; color: #2c3e50; font-weight: bold; }
+.timer-inputs input.option-m-input::before { left: 40px; }
+.timer-inputs input.option-s-input::before { left: 85px; }
 
 .action-buttons { display: flex; gap: 10px; }
 .action-buttons button { flex-grow: 1; padding: 10px; border: none; color: white; font-size: 16px; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; }
@@ -69,14 +87,14 @@ body {
 .timer-controls button { flex-grow: 1; padding: 8px; font-size: 16px; border-radius: 4px; border: 1px solid #bdc3c7; cursor: pointer; }
 #start-pause-btn { background-color: #2ecc71; color: white; border-color: #27ae60; }
 #start-pause-btn.paused { background-color: #f39c12; border-color: #d35400;}
-#reset-btn { background-color: #e74c3c; color: white; border-color: #c0392b;}
+#reset-btn { background-color: #e74c3c; color: white; border-color: #c03b2b;}
 .time-adjust-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
 .time-adjust-buttons .time-btn { padding: 5px; font-size: 14px; border: 1px solid #bdc3c7; background-color: #ecf0f1; border-radius: 4px; cursor: pointer; }
 
-/* 結果彈窗樣式 (不變) */
+/* 結果彈窗樣式 */
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
 .modal-overlay.visible { opacity: 1; visibility: visible; }
-.modal-content { background-color: white; padding: 30px 40px; border-radius: 12px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transform: scale(0.8); transition: transform 0.3s ease; }
+.modal-content { background-color: white; padding: 30px 40px; border-radius: 12px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transform: scale(0.8); transition: transform 0.3s ease; -webkit-app-region: no-drag; }
 .modal-overlay.visible .modal-content { transform: scale(1); }
 #winner-text { font-size: 2.5em; color: #e67e22; margin: 10px 0 20px; }
 .modal-buttons button { padding: 10px 20px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin: 0 10px; }

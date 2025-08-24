@@ -1,16 +1,26 @@
 const { ipcRenderer } = require('electron');
 
-// --- 元素獲取 ---
 const countdownDisplay = document.getElementById('countdown-display');
-
-// --- 計時器變數 ---
 let countdownSeconds = 0;
 let countdownInterval = null;
 
-// ==================================================================
-//  ★★★ 以下是之前遺漏的、完整的核心函數 ★★★
-// ==================================================================
+// --- IPC 通讯 ---
+ipcRenderer.on('f10-pressed', () => {
+    ipcRenderer.send('toggle-my-frame');
+});
 
+ipcRenderer.on('timer-command', (event, command) => {
+    if (command === 'start-pause') startPauseTimer();
+    if (command === 'reset') resetTimer();
+});
+ipcRenderer.on('adjust-time-command', (event, seconds) => adjustTime(seconds));
+ipcRenderer.on('apply-time-change', (event, timeData) => {
+    const timeToAdd = (timeData.h * 3600) + (timeData.m * 60) + timeData.s;
+    adjustTime(timeToAdd);
+});
+
+
+// --- 核心函数 ---
 function formatTime(totalSeconds) {
     const sign = totalSeconds < 0 ? "-" : "";
     totalSeconds = Math.abs(totalSeconds);
@@ -48,16 +58,5 @@ function resetTimer() {
     updateDisplay();
 }
 
-// --- IPC 通訊 ---
-ipcRenderer.on('timer-command', (event, command) => {
-    if (command === 'start-pause') startPauseTimer();
-    if (command === 'reset') resetTimer();
-});
-ipcRenderer.on('adjust-time-command', (event, seconds) => adjustTime(seconds));
-ipcRenderer.on('apply-time-change', (event, timeData) => {
-    const timeToAdd = (timeData.h * 3600) + (timeData.m * 60) + timeData.s;
-    adjustTime(timeToAdd);
-});
-
-// --- 初始載入 ---
+// --- 初始加载 ---
 window.onload = updateDisplay;

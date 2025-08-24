@@ -1,16 +1,25 @@
 {
-  "name": "v1.2",
+  "name": "yume-lucky-wheel-timer",
+  "productName": "yumeの幸運轉盤計時器",
   "version": "1.0.0",
-  "description": "",
+  "description": "一個幸運轉盤和計時器應用",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "package": "electron-forge package",
+    "make": "electron-forge make"
   },
   "keywords": [],
-  "author": "",
+  "author": "Your Name",
   "license": "ISC",
   "devDependencies": {
-    "electron": "^31.0.0" 
+    "@electron-forge/cli": "^7.4.0",
+    "@electron-forge/maker-squirrel": "^7.4.0",
+    "@electron-forge/maker-zip": "^7.4.0",
+
+    "electron": "^31.0.1"
+  },
+  "dependencies": {
+    "electron-squirrel-startup": "^1.0.1"
   }
 }

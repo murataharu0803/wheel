@@ -1,71 +1,108 @@
-const { app, BrowserWindow, ipcMain } = require('electron');
+const { app, BrowserWindow, ipcMain, globalShortcut } = require('electron');
 const path = require('path');
 
-let turntableWindow, optionsWindow, timerWindow;
-
-function createAllWindows() {
-    // 建立轉盤視窗 (無變化)
-    turntableWindow = new BrowserWindow({ /* ... */ });
-    turntableWindow.loadFile('turntable.html');
-    turntableWindow.on('closed', () => { turntableWindow = null; });
-
-    // 建立選項設定視窗 (無變化)
-    optionsWindow = new BrowserWindow({ /* ... */ });
-    optionsWindow.loadFile('options.html');
-    optionsWindow.on('closed', () => { optionsWindow = null; });
-
-    // 建立計時器視窗 (無變化)
-    timerWindow = new BrowserWindow({ /* ... */ });
-    timerWindow.loadFile('timer.html');
-    timerWindow.on('closed', () => { timerWindow = null; });
+// ★★★ 核心修正：將 squirrel startup 的處理邏輯，移到 app 被宣告之後 ★★★
+// 這是官方推薦的、最穩妥的做法
+if (require('electron-squirrel-startup')) {
+    app.quit();
 }
 
-app.whenReady().then(createAllWindows);
-app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
-app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createAllWindows(); });
+// 全域變數
+let optionsWindow = null;
+let turntableWindow = null;
+let timerWindow = null;
+let isTurntableFrameless = false;
+let isTimerFrameless = false;
+let lastKnownOptionsData = [];
 
-// ==================================================================
-//  ★★★ 升級後的跨行程通訊 (IPC) ★★★
-// ==================================================================
-
-// 轉發選項更新 (無變化)
-ipcMain.on('update-wheel', (event, optionsData) => {
-    if (turntableWindow) {
-        turntableWindow.webContents.send('wheel-updated', optionsData);
+// 狀態廣播函數
+function broadcastWindowState() {
+    const state = {
+        isTurntableOpen: !!(turntableWindow && !turntableWindow.isDestroyed()),
+        isTimerOpen: !!(timerWindow && !timerWindow.isDestroyed()),
+    };
+    if (optionsWindow && !optionsWindow.isDestroyed()) {
+        optionsWindow.webContents.send('window-state-update', state);
     }
-});
-
-// 轉發中獎時間 (無變化)
-ipcMain.on('spin-result', (event, timeData) => {
-    // ★★★ 現在廣播給兩個視窗 ★★★
-    if (optionsWindow) optionsWindow.webContents.send('apply-time-change', timeData);
-    if (timerWindow) timerWindow.webContents.send('apply-time-change', timeData);
-});
-
-// ★★★ 新增：監聽並廣播計時器控制指令 ★★★
-ipcMain.on('timer-control', (event, command) => {
-    // command 可以是 'start-pause' 或 'reset'
-    if (optionsWindow) optionsWindow.webContents.send('timer-command', command);
-    if (timerWindow) timerWindow.webContents.send('timer-command', command);
-});
-
-// ★★★ 新增：監聽並廣播手動時間調整指令 ★★★
-ipcMain.on('time-adjust', (event, seconds) => {
-    if (optionsWindow) optionsWindow.webContents.send('adjust-time-command', seconds);
-    if (timerWindow) timerWindow.webContents.send('adjust-time-command', seconds);
-});
-
-// 為了讓程式碼更簡潔，補上視窗建立的詳細設定
-function createAllWindows() {
-    turntableWindow = new BrowserWindow({ width: 550, height: 550, x: 50, y: 50, webPreferences: { contextIsolation: false, nodeIntegration: true }, icon: path.join(__dirname, 'icon.ico') });
-    turntableWindow.loadFile('turntable.html');
-    turntableWindow.on('closed', () => { turntableWindow = null; });
-    
-    optionsWindow = new BrowserWindow({ width: 480, height: 620, x: 620, y: 50, parent: turntableWindow, webPreferences: { contextIsolation: false, nodeIntegration: true } });
-    optionsWindow.loadFile('options.html');
-    optionsWindow.on('closed', () => { optionsWindow = null; });
-
-    timerWindow = new BrowserWindow({ width: 300, height: 150, x: 50, y: 620, parent: turntableWindow, webPreferences: { contextIsolation: false, nodeIntegration: true } });
-    timerWindow.loadFile('timer.html');
-    timerWindow.on('closed', () => { timerWindow = null; });
 }
+
+// --- 視窗創建函數 ---
+function createOptionsWindow() {
+    optionsWindow = new BrowserWindow({ width: 480, height: 650, x: 620, y: 50, webPreferences: { contextIsolation: false, nodeIntegration: true }, icon: path.join(__dirname, 'icon.ico') });
+    optionsWindow.loadFile('options.html');
+    
+    optionsWindow.on('close', () => {
+        if (turntableWindow && !turntableWindow.isDestroyed()) turntableWindow.destroy();
+        if (timerWindow && !timerWindow.isDestroyed()) timerWindow.destroy();
+    });
+    optionsWindow.on('closed', () => { app.quit(); });
+}
+
+function createTurntableWindow(bounds = null) {
+    if (turntableWindow && !turntableWindow.isDestroyed()) { turntableWindow.focus(); return; }
+    const windowOptions = { width: 550, height: 550, frame: !isTurntableFrameless, transparent: isTurntableFrameless, parent: optionsWindow, webPreferences: { contextIsolation: false, nodeIntegration: true } };
+    if (bounds) { Object.assign(windowOptions, bounds); } else { windowOptions.x = 50; windowOptions.y = 50; }
+    turntableWindow = new BrowserWindow(windowOptions);
+    turntableWindow.loadFile('turntable.html');
+
+    turntableWindow.webContents.on('did-finish-load', () => {
+        if (turntableWindow && !turntableWindow.isDestroyed()) {
+            turntableWindow.webContents.send('wheel-updated', lastKnownOptionsData);
+        }
+    });
+
+    turntableWindow.on('close', () => {
+        turntableWindow = null;
+        broadcastWindowState();
+    });
+    
+    broadcastWindowState();
+}
+
+function createTimerWindow(bounds = null) {
+    if (timerWindow && !timerWindow.isDestroyed()) { timerWindow.focus(); return; }
+    const windowOptions = { width: 300, height: 150, frame: !isTimerFrameless, transparent: isTimerFrameless, parent: optionsWindow, webPreferences: { contextIsolation: false, nodeIntegration: true } };
+    if (bounds) { Object.assign(windowOptions, bounds); } else { windowOptions.x = 50; windowOptions.y = 620; }
+    timerWindow = new BrowserWindow(windowOptions);
+    timerWindow.loadFile('timer.html');
+    
+    timerWindow.on('close', () => {
+        timerWindow = null;
+        broadcastWindowState();
+    });
+
+    broadcastWindowState();
+}
+
+// --- 應用程式生命週期 ---
+app.whenReady().then(() => {
+    createOptionsWindow();
+    globalShortcut.register('F10', () => {
+        const focusedWindow = BrowserWindow.getFocusedWindow();
+        if (!focusedWindow || focusedWindow.isDestroyed()) return;
+        
+        if (turntableWindow && !turntableWindow.isDestroyed() && focusedWindow.id === turntableWindow.id) {
+            const bounds = turntableWindow.getBounds();
+            isTurntableFrameless = !isTurntableFrameless;
+            turntableWindow.destroy();
+            createTurntableWindow(bounds);
+        } else if (timerWindow && !timerWindow.isDestroyed() && focusedWindow.id === timerWindow.id) {
+            const bounds = timerWindow.getBounds();
+            isTimerFrameless = !isTimerFrameless;
+            timerWindow.destroy();
+            createTimerWindow(bounds);
+        }
+    });
+});
+app.on('will-quit', () => { globalShortcut.unregisterAll(); });
+app.on('window-all-closed', () => { if (process.platform !== 'darwin') app.quit(); });
+app.on('activate', () => { if (BrowserWindow.getAllWindows().length === 0) createOptionsWindow(); });
+
+// --- IPC 通訊 ---
+ipcMain.handle('get-initial-options', () => lastKnownOptionsData);
+ipcMain.on('toggle-turntable', () => { if (turntableWindow && !turntableWindow.isDestroyed()) { turntableWindow.close(); } else { createTurntableWindow(); } });
+ipcMain.on('toggle-timer', () => { if (timerWindow && !timerWindow.isDestroyed()) { timerWindow.close(); } else { createTimerWindow(); } });
+ipcMain.on('update-wheel', (event, optionsData) => { lastKnownOptionsData = optionsData; if (turntableWindow && !turntableWindow.isDestroyed()) { turntableWindow.webContents.send('wheel-updated', optionsData); } });
+ipcMain.on('spin-result', (event, timeData) => { if (optionsWindow && !optionsWindow.isDestroyed()) optionsWindow.webContents.send('apply-time-change', timeData); if (timerWindow && !timerWindow.isDestroyed()) timerWindow.webContents.send('apply-time-change', timeData); });
+ipcMain.on('timer-control', (event, command) => { if (optionsWindow && !optionsWindow.isDestroyed()) optionsWindow.webContents.send('timer-command', command); if (timerWindow && !timerWindow.isDestroyed()) timerWindow.webContents.send('timer-command', command); });
+ipcMain.on('time-adjust', (event, seconds) => { if (optionsWindow && !optionsWindow.isDestroyed()) optionsWindow.webContents.send('adjust-time-command', seconds); if (timerWindow && !timerWindow.isDestroyed()) timerWindow.webContents.send('adjust-time-command', seconds); });

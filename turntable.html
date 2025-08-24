@@ -5,19 +5,17 @@
     <title>轉盤</title>
     <link rel="stylesheet" href="style.css">
 </head>
-<body>
+<body class="borderless-window">
     <div class="wheel-container" style="margin: 20px;">
         <canvas id="canvas" width="500" height="500"></canvas>
         <div class="spin-button" id="spin_button">SPIN</div>
     </div>
 
-    <!-- ★★★ 將結果彈窗的 HTML 移到這裡 ★★★ -->
     <div id="modal" class="modal-overlay">
         <div class="modal-content">
             <p>中獎的是...</p>
             <h2 id="winner-text"></h2>
             <div class="modal-buttons">
-                <!-- 移除按鈕的功能需要更複雜的 IPC，暫時只保留關閉 -->
                 <button id="close-modal-btn">關閉</button>
             </div>
         </div>
