@@ -15,7 +15,9 @@ module.exports = {
         name: 'YumeLuckyWheelTimer',
         // ★★★ 這是顯示在安裝介面和控制台的產品名稱，可以使用中文 ★★★
         productName: 'yumeの幸運轉盤計時器', 
-        setupIcon: './icon.ico'
+        setupIcon: './icon.ico',
+        createDesktopShortcut: true, // 明確要求建立桌面捷徑
+        createStartMenuShortcut: true // 明確要求建立開始功能表捷徑
       },
     },
     {

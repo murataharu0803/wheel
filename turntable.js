@@ -45,7 +45,9 @@ function updateWheel(options) {
         'numSegments': segmentsForWheel.length,
         'outerRadius': 240,
         'innerRadius': 70,
-        'textFontSize': 16,
+        'textFontSize': 19, // ★★★ 核心修正：將字體大小從 16 增加到 20 ★★★
+        'textFontFamily': 'cwTeXFangSong', // 可選：設定一個更清晰的字體
+        'textFillStyle': 'black', // 可選：確保文字是黑色，更易讀
         'segments': segmentsForWheel,
         'animation': {
             'type': 'spinToStop',

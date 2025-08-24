@@ -1,18 +1,32 @@
 const { ipcRenderer } = require('electron');
 
+const timerWrapper = document.getElementById('timer-wrapper');
 const countdownDisplay = document.getElementById('countdown-display');
 
-// ★★★ 核心修正：移除所有本地計時器變數和函數 ★★★
-
-// ★★★ 核心修正：監聽來自 main.js 的時間更新 ★★★
-ipcRenderer.on('time-update', (event, timeString) => {
-    countdownDisplay.textContent = timeString;
+// 監聽來自 main.js 的樣式更新指令
+ipcRenderer.on('toggle-transparent-bg', () => {
+    timerWrapper.classList.toggle('transparent');
 });
 
-// (監聽 F10 的邏輯不變)
+ipcRenderer.on('toggle-font-weight', () => {
+    countdownDisplay.classList.toggle('bold-text');
+});
+
+ipcRenderer.on('apply-color-update', (event, colors) => {
+    if (countdownDisplay) {
+        countdownDisplay.style.backgroundColor = colors.background;
+        countdownDisplay.style.color = colors.font;
+    }
+});
+
+// 監聽時間更新
+ipcRenderer.on('time-update', (event, timeString) => {
+    if (countdownDisplay) {
+        countdownDisplay.textContent = timeString;
+    }
+});
+
+// 監聽 F10
 ipcRenderer.on('f10-pressed', () => {
     ipcRenderer.send('toggle-my-frame');
 });
-
-// ★★★ 核心修正：初始載入時，請求一次當前時間 ★★★
-// (這個邏輯已移至 main.js 的 did-finish-load 中，此處無需操作)

@@ -12,7 +12,10 @@
             <button id="show-turntable-btn">顯示轉盤</button>
             <button id="show-timer-btn">顯示計時器</button>
         </div>
-
+        <div class="io-controls">
+            <button id="import-btn">匯入設定</button>
+            <button id="export-btn">匯出設定</button>
+        </div>
         <h2>選項設定</h2>
         <div id="options-list"></div>
         <div class="action-buttons">
@@ -23,10 +26,22 @@
         <div class="countdown-timer-container">
             <h3>倒數計時器</h3>
             <div id="countdown-display">00:00:00</div>
-            <div class="timer-controls">
+            
+            
+            <div class="timer-controls-grid">
                 <button id="start-pause-btn">開始</button>
                 <button id="reset-btn">重置</button>
+                <div class="color-picker-wrapper">
+                    <label for="bg-color-picker">背景</label>
+                    <input type="color" id="bg-color-picker" value="#2c3e50">
+                </div>
+                <div class="color-picker-wrapper">
+                    <label for="font-color-picker">字體</label>
+                    <input type="color" id="font-color-picker" value="#ecf0f1">
+                </div>
             </div>
+    
+            
             <div class="time-adjust-buttons">
                 <button class="time-btn" data-time="3600">+1h</button>
                 <button class="time-btn" data-time="-3600">-1h</button>
