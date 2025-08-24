@@ -1,0 +1,167 @@
+/* 基本樣式 */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: #f0f2f5;
+    margin: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    height: 100vh;
+    overflow: hidden;
+}
+
+.app-container {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+    padding: 20px;
+}
+
+/* 轉盤區 */
+.wheel-container {
+    position: relative;
+    width: 500px;
+    height: 500px;
+}
+.wheel-container::after {
+    content: '';
+    position: absolute;
+    top: -5px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 0;
+    height: 0;
+    border-left: 20px solid transparent;
+    border-right: 20px solid transparent;
+    border-top: 30px solid #c0392b;
+    z-index: 10;
+}
+#canvas { width: 100%; height: 100%; }
+
+.spin-button {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 100px;
+    height: 100px;
+    background-color: #ffffff;
+    border: 8px solid #ecf0f1;
+    border-radius: 50%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 24px;
+    font-weight: bold;
+    color: #34495e;
+    cursor: pointer;
+    user-select: none;
+    transition: transform 0.1s ease, background-color 0.2s;
+}
+.spin-button:hover { background-color: #f9f9f9; }
+.spin-button:active { transform: translate(-50%, -50%) scale(0.95); }
+
+/* 選項區 */
+.options-container {
+    background: #fff;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    width: 400px; /* 稍微再加寬一點以容納百分比 */
+    max-height: 90vh;
+    display: flex;
+    flex-direction: column;
+}
+.options-container h2 { margin-top: 0; text-align: center; color: #2c3e50; }
+
+#options-list {
+    flex-grow: 1;
+    overflow-y: auto;
+    margin-bottom: 15px;
+    padding-right: 5px;
+}
+
+.option-row { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; }
+.option-row input[type="text"] { flex-grow: 1; padding: 8px; border: 1px solid #bdc3c7; border-radius: 4px; font-size: 14px; }
+.option-row input[type="number"] { width: 50px; padding: 8px; border: 1px solid #bdc3c7; border-radius: 4px; text-align: center; }
+.option-row input[type=number]::-webkit-inner-spin-button, 
+.option-row input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.option-row input[type=number] { -moz-appearance: textfield; }
+
+/* ★★★ 新增的百分比標籤樣式 ★★★ */
+.option-percentage {
+    width: 50px; /* 和機率輸入框對齊 */
+    text-align: right;
+    font-size: 13px;
+    color: #7f8c8d;
+    padding-right: 5px;
+}
+
+.option-row input[type="color"] { -webkit-appearance: none; width: 36px; height: 36px; border: 1px solid #bdc3c7; border-radius: 4px; cursor: pointer; padding: 0; background-color: transparent; }
+.option-row input[type="color"]::-webkit-color-swatch-wrapper { padding: 2px; }
+.option-row input[type="color"]::-webkit-color-swatch { border: none; border-radius: 3px; }
+.option-row .remove-btn { background: none; border: none; color: #e74c3c; font-size: 20px; cursor: pointer; padding: 5px; }
+.option-row .remove-btn:hover { color: #c0392b; }
+
+.action-buttons { display: flex; gap: 10px; }
+.action-buttons button { flex-grow: 1; padding: 10px; border: none; color: white; font-size: 16px; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; }
+#add-option-btn { background-color: #27ae60; }
+#add-option-btn:hover { background-color: #229954; }
+#update-wheel-btn { background-color: #3498db; }
+#update-wheel-btn:hover { background-color: #2980b9; }
+
+/* 結果彈窗 (Modal) 的完整樣式 */
+.modal-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background-color: rgba(0, 0, 0, 0.6);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 1000;
+    opacity: 0;
+    visibility: hidden;
+    transition: opacity 0.3s, visibility 0.3s;
+}
+
+.modal-overlay.visible {
+    opacity: 1;
+    visibility: visible;
+}
+
+.modal-content {
+    background-color: white;
+    padding: 30px 40px;
+    border-radius: 12px;
+    text-align: center;
+    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+    transform: scale(0.8);
+    transition: transform 0.3s ease;
+}
+
+.modal-overlay.visible .modal-content {
+    transform: scale(1);
+}
+
+#winner-text {
+    font-size: 2.5em;
+    color: #e67e22;
+    margin: 10px 0 20px;
+}
+
+.modal-buttons button {
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    font-size: 16px;
+    cursor: pointer;
+    margin: 0 10px;
+    transition: background-color 0.2s;
+}
+#remove-winner-btn { background-color: #e74c3c; color: white; }
+#remove-winner-btn:hover { background-color: #c0392b; }
+#close-modal-btn { background-color: #95a5a6; color: white; }
+#close-modal-btn:hover { background-color: #7f8c8d; }
