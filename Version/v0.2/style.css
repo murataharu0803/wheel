@@ -1,0 +1,84 @@
+/* 基本樣式 */
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    background-color: #f0f2f5; margin: 0; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden;
+}
+.app-container { display: flex; gap: 30px; align-items: flex-start; padding: 20px; }
+
+/* 轉盤區 */
+.wheel-container { position: relative; width: 500px; height: 500px; }
+.wheel-container::after { content: ''; position: absolute; top: -5px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 20px solid transparent; border-right: 20px solid transparent; border-top: 30px solid #c0392b; z-index: 10; }
+#canvas { width: 100%; height: 100%; }
+.spin-button { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100px; height: 100px; background-color: #ffffff; border: 8px solid #ecf0f1; border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 24px; font-weight: bold; color: #34495e; cursor: pointer; user-select: none; transition: transform 0.1s ease, background-color 0.2s; }
+.spin-button:hover { background-color: #f9f9f9; }
+.spin-button:active { transform: translate(-50%, -50%) scale(0.95); }
+
+/* 選項區 */
+.options-container { background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 420px; max-height: 90vh; display: flex; flex-direction: column; }
+.options-container h2 { margin-top: 0; text-align: center; color: #2c3e50; }
+#options-list { flex-grow: 1; overflow-y: auto; margin-bottom: 15px; padding-right: 5px; }
+
+.option-row { display: flex; align-items: center; gap: 5px; margin-bottom: 8px; }
+.option-row input[type="text"] { flex-grow: 1; padding: 8px; border: 1px solid #bdc3c7; border-radius: 4px; font-size: 14px; }
+.option-row input[type="number"] { width: 45px; padding: 8px; border: 1px solid #bdc3c7; border-radius: 4px; text-align: center; }
+.option-row input[type=number]::-webkit-inner-spin-button, 
+.option-row input[type=number]::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
+.option-row input[type=number] { -moz-appearance: textfield; }
+.option-percentage { width: 50px; text-align: right; font-size: 13px; color: #7f8c8d; padding-right: 5px; }
+.option-row input[type="color"] { -webkit-appearance: none; width: 36px; height: 36px; border: 1px solid #bdc3c7; border-radius: 4px; cursor: pointer; flex-shrink: 0; padding: 0; background-color: transparent; }
+.option-row input[type="color"]::-webkit-color-swatch-wrapper { padding: 2px; }
+.option-row input[type="color"]::-webkit-color-swatch { border: none; border-radius: 3px; }
+.option-row .remove-btn { background: none; border: none; color: #e74c3c; font-size: 20px; cursor: pointer; padding: 5px; }
+
+/* 選項內的計時器輸入框樣式 */
+.timer-inputs { display: flex; gap: 2px; align-items: center; position: relative; }
+.timer-inputs::before { content: '|'; color: #bdc3c7; margin: 0 4px; }
+.timer-inputs input { width: 35px !important; font-size: 12px; padding: 8px 4px !important; text-align: center; }
+
+/* ★★★ 新增：用偽元素在輸入框之間插入 ":" ★★★ */
+.timer-inputs input:not(:first-child) {
+    margin-left: 8px; /* 為 ":" 留出空間 */
+}
+.timer-inputs input:not(:first-child)::before {
+    content: ":";
+    position: absolute;
+    left: -6px; /* 調整 ":" 的精確位置 */
+    color: #2c3e50;
+    font-weight: bold;
+}
+/* 針對第二個輸入框 (分鐘) 的 ":" 定位 */
+.timer-inputs input.option-m-input::before {
+    left: 40px;
+}
+/* 針對第三個輸入框 (秒) 的 ":" 定位 */
+.timer-inputs input.option-s-input::before {
+    left: 85px;
+}
+
+
+.action-buttons { display: flex; gap: 10px; }
+.action-buttons button { flex-grow: 1; padding: 10px; border: none; color: white; font-size: 16px; border-radius: 4px; cursor: pointer; transition: background-color 0.2s; }
+#add-option-btn { background-color: #27ae60; }
+#update-wheel-btn { background-color: #3498db; }
+
+/* 主倒數計時器面板樣式 */
+.countdown-timer-container { border-top: 1px solid #ecf0f1; margin-top: 15px; padding-top: 15px; }
+.countdown-timer-container h3 { margin: 0 0 10px 0; text-align: center; color: #34495e; font-weight: 500; }
+#countdown-display { font-family: 'Courier New', Courier, monospace; font-size: 2.8em; text-align: center; background-color: #2c3e50; color: #ecf0f1; border-radius: 6px; padding: 5px 10px; margin-bottom: 10px; }
+.timer-controls { display: flex; gap: 10px; margin-bottom: 10px; }
+.timer-controls button { flex-grow: 1; padding: 8px; font-size: 16px; border-radius: 4px; border: 1px solid #bdc3c7; cursor: pointer; }
+#start-pause-btn { background-color: #2ecc71; color: white; border-color: #27ae60; }
+#start-pause-btn.paused { background-color: #f39c12; border-color: #d35400;}
+#reset-btn { background-color: #e74c3c; color: white; border-color: #c0392b;}
+.time-adjust-buttons { display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; }
+.time-adjust-buttons .time-btn { padding: 5px; font-size: 14px; border: 1px solid #bdc3c7; background-color: #ecf0f1; border-radius: 4px; cursor: pointer; }
+
+/* 結果彈窗樣式 (不變) */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center; align-items: center; z-index: 1000; opacity: 0; visibility: hidden; transition: opacity 0.3s, visibility 0.3s; }
+.modal-overlay.visible { opacity: 1; visibility: visible; }
+.modal-content { background-color: white; padding: 30px 40px; border-radius: 12px; text-align: center; box-shadow: 0 5px 15px rgba(0,0,0,0.3); transform: scale(0.8); transition: transform 0.3s ease; }
+.modal-overlay.visible .modal-content { transform: scale(1); }
+#winner-text { font-size: 2.5em; color: #e67e22; margin: 10px 0 20px; }
+.modal-buttons button { padding: 10px 20px; border: none; border-radius: 5px; font-size: 16px; cursor: pointer; margin: 0 10px; }
+#remove-winner-btn { background-color: #e74c3c; color: white; }
+#close-modal-btn { background-color: #95a5a6; color: white; }
