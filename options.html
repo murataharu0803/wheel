@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>選項設定</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body style="background-color: #fff;">
+    <div class="options-container" style="box-shadow: none; width: auto; height: 100vh;">
+        <h2>選項設定</h2>
+        <div id="options-list"></div>
+        <div class="action-buttons">
+            <button id="add-option-btn">＋ 新增選項</button>
+            <button id="update-wheel-btn">更新轉盤</button>
+        </div>
+        
+        <!-- ★★★ 將計時器面板移到這裡 ★★★ -->
+        <div class="countdown-timer-container">
+            <h3>倒數計時器</h3>
+            <div id="countdown-display">00:00:00</div>
+            <div class="timer-controls">
+                <button id="start-pause-btn">開始</button>
+                <button id="reset-btn">重置</button>
+            </div>
+            <div class="time-adjust-buttons">
+                <button class="time-btn" data-time="3600">+1h</button>
+                <button class="time-btn" data-time="-3600">-1h</button>
+                <button class="time-btn" data-time="300">+5m</button>
+                <button class="time-btn" data-time="-300">-5m</button>
+                <button class="time-btn" data-time="60">+1m</button>
+                <button class="time-btn" data-time="-60">-1m</button>
+            </div>
+        </div>
+    </div>
+    <script src="options.js"></script>
+</body>
+</html>
