@@ -13,6 +13,7 @@ export default defineConfig({
   ],
   build: {
     outDir: '../build',
+    emptyOutDir: true,
     rollupOptions: {
       input: {
         wheel: resolve(__dirname, 'templates/index.html'),
