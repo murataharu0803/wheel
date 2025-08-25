@@ -2,8 +2,8 @@ import { MantineProvider } from '@mantine/core'
 import React from 'react'
 import ReactDOM from 'react-dom/client'
 
-import App from '@/App'
-import AppRouter from '@/AppRouter'
+import App from '@/frontend/App'
+import AppRouter from '@/frontend/AppRouter'
 
 import '@/assets/global.sass'
 import '@mantine/core/styles.css'

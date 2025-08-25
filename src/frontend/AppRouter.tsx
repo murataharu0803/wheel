@@ -5,8 +5,8 @@ import {
   RouterProvider,
 } from 'react-router'
 
-import Dashboard from '@/pages/Dashboard'
-import Wheel from '@/pages/Wheel'
+import Dashboard from '@/frontend/pages/Dashboard'
+import Wheel from '@/frontend/pages/Wheel'
 
 const routes = [
   { key: 'wheel', path: '/', component: <Wheel /> },

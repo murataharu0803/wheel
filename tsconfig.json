@@ -34,7 +34,7 @@
     "moduleDetection": "force",
     "noUncheckedSideEffectImports": true,
     "emitDecoratorMetadata": true,
-    "types": ["@types/node", "@types/react", "./src/global.d.ts"],
+    "types": ["@types/node", "@types/react", "./src/frontend/global.d.ts"],
     "baseUrl": ".",
     "paths": {
       "@/*": [
