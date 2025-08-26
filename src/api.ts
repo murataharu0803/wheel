@@ -1,33 +1,50 @@
-import { NanaRouter } from '@harlos/nana'
+import { existsSync } from 'fs'
+import { readFile, writeFile } from 'fs/promises'
 
-const router = new NanaRouter()
+import defaultConfig from '@/defaultConfig'
+import TimerData from '@/types/TimerData'
+import WheelConfig from '@/types/WheelConfig'
 
-/**
- * GET /config
- * Reads config from `./config.json`.
- */
-router.get('/config', async ctx => {})
+export const writeConfig = async(config: WheelConfig) =>
+  writeFile('./config.json', JSON.stringify(config, null, 2))
 
-/** PUT /config
- * Writes config to `./config.json`.
- */
-router.put('/config', async ctx => {})
+export const readConfig = async(): Promise<WheelConfig> => {
+  if (existsSync('./config.json')) {
+    const configData = await readFile('./config.json', 'utf-8')
+    return JSON.parse(configData)
+  } else {
+    await writeConfig(defaultConfig)
+    return defaultConfig
+  }
+}
 
-/**
- * GET /timer
- * Reads timer data from `./timer.json`.
- */
-router.get('/timer', async ctx => {})
+export const writeTimer = async(timer: TimerData) =>
+  writeFile('./timer.json', JSON.stringify(timer, null, 2))
 
-/**
- * PUT /timer
- * Writes timer data to `./timer.json`.
- */
-router.put('/timer', async ctx => {})
+export const readTimer = async(): Promise<TimerData> => {
+  if (existsSync('./timer.json')) {
+    const timerData = await readFile('./timer.json', 'utf-8')
+    return JSON.parse(timerData)
+  } else {
+    const defaultTimer = { durationLeft: 0, isRunning: false, timestamp: Date.now() }
+    await writeTimer(defaultTimer)
+    return defaultTimer
+  }
+}
 
-/**
- * POST /wheel
- * Turn the wheel. (Claude, do this later.)
- */
-
-export default router
+export const updateTimer = async(amount = 0, active?: boolean, reset = false) => {
+  const now = Date.now()
+  const timer = await readTimer()
+  const passed = timer.isRunning ? (now - timer.timestamp) / 1000 : 0
+  const newTimer: TimerData = {
+    timestamp: now,
+    durationLeft: reset ? amount : timer.durationLeft - passed + amount,
+    isRunning: active === undefined ? timer.isRunning : active,
+  }
+  if (newTimer.durationLeft <= 0) {
+    newTimer.durationLeft = 0
+    newTimer.isRunning = false
+  }
+  await writeTimer(newTimer)
+  return newTimer
+}

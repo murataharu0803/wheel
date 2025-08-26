@@ -5,8 +5,10 @@ import ReactDOM from 'react-dom/client'
 import App from '@/frontend/App'
 import AppRouter from '@/frontend/AppRouter'
 
-import '@/assets/global.sass'
+import '@mantine/charts/styles.css'
 import '@mantine/core/styles.css'
+
+import '@/frontend/assets/global.sass'
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>

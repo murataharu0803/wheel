@@ -4,3 +4,5 @@ dist
 old
 build
 dist
+config.json
+timer.json

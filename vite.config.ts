@@ -18,6 +18,7 @@ export default defineConfig({
       input: {
         wheel: resolve(__dirname, 'templates/index.html'),
         dashboard: resolve(__dirname, 'templates/dashboard/index.html'),
+        timer: resolve(__dirname, 'templates/timer/index.html'),
       },
     },
   },
