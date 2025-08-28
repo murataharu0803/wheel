@@ -1,0 +1,58 @@
+{
+  "compilerOptions": {
+    "noFallthroughCasesInSwitch": true,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "resolveJsonModule": true,
+    "composite": true,
+    "noEmit": false,
+    "emitDeclarationOnly": true,
+    "outDir": "./dist",
+    "sourceMap": true,
+    "allowJs": true,
+    "plugins": [],
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": false,
+    "isolatedModules": true,
+    "experimentalDecorators": true,
+    "jsx": "preserve",
+    "lib": [
+      "DOM",
+      "DOM.AsyncIterable",
+      "ESNext",
+      "ESNext.AsyncIterable"
+    ],
+    "target": "ESNEXT",
+    "useDefineForClassFields": true,
+    "incremental": true,
+    "skipLibCheck": true,
+    "allowImportingTsExtensions": true,
+    "moduleDetection": "force",
+    "noUncheckedSideEffectImports": true,
+    "emitDecoratorMetadata": true,
+    "types": ["@types/node", "@types/react", "./src/frontend/global.d.ts"],
+    "baseUrl": ".",
+    "paths": {
+      "@/*": [
+        "./src/*"
+      ],
+      "~/*": [
+        "./*"
+      ],
+    }
+  },
+  "include": [
+    "**/*.json",
+    "**/*.ts",
+    "**/*.tsx",
+    "**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "dist"
+  ]
+}
