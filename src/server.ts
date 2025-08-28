@@ -1,19 +1,33 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import express, { Express, json } from 'express'
 import { createServer } from 'node:http'
 import serveStatic from 'serve-static'
-import { Server } from 'socket.io'
+import { Server, Socket } from 'socket.io'
 
-import { readConfig, readTimer, updateTimer } from '@/api'
-import { logger } from '@/logger'
-import { WheelOption } from '@/types/WheelConfig'
+import { readConfig, readTimer, updateTimer, writeConfig } from '@/api'
+import console, { logger } from '@/logger'
 import { R_360 } from '@/utils/svg'
 import { fromUnitToSeconds } from '@/utils/time'
+
+import { WheelOption } from '@/types/WheelConfig'
 
 const app: Express = express()
 
 app.use(json())
 app.use(logger)
 app.use(serveStatic('build'))
+
+const emit = (
+  socket: Socket | Server,
+  event: string,
+  ...data: any[]
+) => {
+  const dataText = data.map(d =>
+    d instanceof Object ? JSON.stringify(d) : String(d),
+  )
+  console.log(`<${event}>`, ...dataText)
+  socket.emit(event, ...data)
+}
 
 const httpServer = createServer(app)
 const io = new Server(httpServer)
@@ -23,55 +37,50 @@ io.on('connection', async socket => {
   console.log('Connected.')
   const config = await readConfig()
   const timer = await readTimer()
-  socket.emit('updateConfig', config)
-  socket.emit('updateTimer', timer)
-  socket.emit('spinAngleInit', wheelAngle)
+  emit(socket, 'updateConfig', config)
+  emit(socket, 'updateTimer', timer)
+  emit(socket, 'spinAngleInit', wheelAngle)
 
   socket.on('disconnect', () => {
     console.log('Disconnected.')
   })
 
-  socket.on('updateConfig', async msg => {
-    console.log('[updateConfig]', msg)
+  socket.on('updateConfig', async cfg => {
+    console.log('[updateConfig]', cfg)
     const config = await readConfig()
-    const newConfig = { config, ...msg }
-    io.emit('updateConfig', newConfig)
+    const newConfig = { config, ...cfg }
+    await writeConfig(newConfig)
+    emit(io, 'updateConfig', newConfig)
   })
 
   socket.on('pause', async() => {
     console.log('[pause]')
     const newTimer = await updateTimer(0, false)
-    io.emit('updateTimer', newTimer)
+    emit(io, 'updateTimer', newTimer)
   })
 
   socket.on('resume', async() => {
     console.log('[resume]')
     const newTimer = await updateTimer(0, true)
-    io.emit('updateTimer', newTimer)
+    emit(io, 'updateTimer', newTimer)
   })
 
   socket.on('updateTimer', async(amount = 0) => {
     console.log('[updateTimer]', amount)
     const newTimer = await updateTimer(Number(amount))
-    io.emit('updateTimer', newTimer)
+    emit(io, 'updateTimer', newTimer)
   })
 
   socket.on('reset', async() => {
     console.log('[reset]')
     const newTimer = await updateTimer(0, false, true)
-    io.emit('updateTimer', newTimer)
+    emit(io, 'updateTimer', newTimer)
   })
 
   socket.on('timeup', async() => {
     console.log('[timeup]')
     await updateTimer(0, false, true)
-    io.emit('timeup')
-  })
-
-  socket.on('spinAngle', async angle => {
-    console.log('[spinAngle]', angle)
-    wheelAngle = angle
-    io.emit('spinAngle', wheelAngle)
+    emit(io, 'timeup')
   })
 
   socket.on('spin', async() => {
@@ -112,17 +121,17 @@ io.on('connection', async socket => {
       else return start <= angle || end > angle
     })
     if (!targetOption) {
-      console.error('找不到中獎選項')
+      console.error('Cannot find target option.')
       return
     }
     const targetValue = fromUnitToSeconds(targetOption.value, targetOption.unit)
     wheelAngle = targetAngle
-    io.emit('spinAngle', targetAngle)
+    emit(io, 'spinAngle', targetAngle)
 
     setTimeout(async() => {
       const newTimer = await updateTimer(targetValue)
-      io.emit('spin', targetOption)
-      io.emit('updateTimer', newTimer)
+      emit(io, 'spin', targetOption)
+      emit(io, 'updateTimer', newTimer)
       isSpinning = false
     }, spinDuration * 1000 + 500)
   })

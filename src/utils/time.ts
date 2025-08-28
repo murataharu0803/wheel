@@ -1,5 +1,6 @@
-export const fromUnitToSeconds = (value: number, unit: 's' | 'm' | 'h' | 'd'): number => {
-  console.log(value, unit)
+import { TimeUnit } from '@/types/WheelConfig'
+
+export const fromUnitToSeconds = (value: number, unit: TimeUnit): number => {
   switch (unit) {
     case 's':
       return value
@@ -12,7 +13,7 @@ export const fromUnitToSeconds = (value: number, unit: 's' | 'm' | 'h' | 'd'): n
   }
 }
 
-export const fromSecondsToUnit = (value: number, unit: 's' | 'm' | 'h' | 'd'): number => {
+export const fromSecondsToUnit = (value: number, unit: TimeUnit): number => {
   switch (unit) {
     case 's':
       return value
@@ -25,7 +26,7 @@ export const fromSecondsToUnit = (value: number, unit: 's' | 'm' | 'h' | 'd'): n
   }
 }
 
-export const t = (unit: 's' | 'm' | 'h' | 'd'): string => {
+export const t = (unit: TimeUnit): string => {
   switch (unit) {
     case 's':
       return '秒'

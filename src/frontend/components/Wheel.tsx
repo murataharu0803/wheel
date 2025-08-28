@@ -4,9 +4,14 @@ import WheelContext from '@/frontend/context/WheelContext'
 import { optionMapper } from '@/utils/optionMapper'
 import { getSectorPath } from '@/utils/svg'
 
-import { WheelOption } from '@/types/WheelConfig'
+import WheelConfig, { WheelOption } from '@/types/WheelConfig'
 
-const Wheel: React.FC<{ onResult?: (_: WheelOption) => void }> = ({ onResult = () => {} }) => {
+interface WheelProps {
+  configOverride?: WheelConfig
+  onResult?: (_: WheelOption) => void
+}
+
+const Wheel: React.FC<WheelProps> = ({ configOverride, onResult = () => {} }) => {
   const { config, socket } = useContext(WheelContext)
 
   const isSpinning = useRef(false)
@@ -28,7 +33,7 @@ const Wheel: React.FC<{ onResult?: (_: WheelOption) => void }> = ({ onResult = (
     centerLabelStyle,
     indicatorPosition,
     indicatorColor,
-  } = config
+  } = configOverride || config
 
   const thick = donutThickness || 0
   const sectorOptions = optionMapper(options)
@@ -79,15 +84,6 @@ const Wheel: React.FC<{ onResult?: (_: WheelOption) => void }> = ({ onResult = (
     height={radius * 2 + 100}
     viewBox={`${-radius - 50} ${-radius - 50} ${radius * 2 + 100} ${radius * 2 + 100}`}
   >
-    <text
-      textAnchor='middle'
-      x={0}
-      y={0}
-      style={{ ...centerLabelStyle }}
-      dominantBaseline="central"
-    >
-      {centerLabel}
-    </text>
     <g className="rotate" style={{
       transition: `transform ${wheelAnimating ? spinDuration : 0}s ${spinTimingFunction}`,
       transform: `rotate(${wheelPosition * 360}deg)`,
@@ -130,6 +126,15 @@ const Wheel: React.FC<{ onResult?: (_: WheelOption) => void }> = ({ onResult = (
         transform: `rotate(${indicatorPosition}deg)`,
       }}
     />
+    <text
+      textAnchor='middle'
+      x={0}
+      y={0}
+      style={{ ...centerLabelStyle }}
+      dominantBaseline="central"
+    >
+      {centerLabel}
+    </text>
   </svg>
 }
 

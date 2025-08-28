@@ -16,6 +16,7 @@
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
     "@mantine/charts": "^8.2.7",
+    "@mantine/notifications": "^8.2.7",
     "@number-flow/react": "^0.5.10",
     "bun": "^1.2.20",
     "express": "^5.1.0",

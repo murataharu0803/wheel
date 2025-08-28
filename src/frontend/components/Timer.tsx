@@ -35,7 +35,6 @@ const Timer: React.FC = () => {
       const now = Date.now()
       const passed = timer.isRunning ? now - timer.timestamp : 0
       const newTimeLeft = timer.durationLeft - passed / 1000
-      console.log(timer, now, passed, newTimeLeft)
       setTimeLeft(newTimeLeft)
       setIsRunning(timer.isRunning)
     }
@@ -52,6 +51,7 @@ const Timer: React.FC = () => {
         setTimeLeft(t => {
           const newT = t - ms / 1000
           if (newT < 0) {
+            console.log('<timeup>')
             socket?.emit('timeup')
             return 0
           }

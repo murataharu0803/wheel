@@ -18,7 +18,7 @@ export const readConfig = async(): Promise<WheelConfig> => {
   }
 }
 
-export const writeTimer = async(timer: TimerData) =>
+const writeTimer = async(timer: TimerData) =>
   writeFile('./timer.json', JSON.stringify(timer, null, 2))
 
 export const readTimer = async(): Promise<TimerData> => {

@@ -1,8 +1,10 @@
+export type TimeUnit = 's' | 'm' | 'h' | 'd'
+
 export interface WheelOption {
   label: string
   weight: number
   value: number
-  unit: 's' | 'm' | 'h' | 'd'
+  unit: TimeUnit
   color: string
 }
 
@@ -11,6 +13,11 @@ export interface FontStyle {
   fontFamily: string
   fontSize: number
   fontWeight: string | number
+}
+
+export interface Shortcut {
+  amount: number // positive only
+  unit: TimeUnit
 }
 
 export default interface WheelConfig {
@@ -31,8 +38,5 @@ export default interface WheelConfig {
   timerDisplayMs: boolean
   timerDisplayDay: boolean
   timerDigitStyle: FontStyle
-  timerShortcuts: {
-    amount: number // positive only
-    unit: 's' | 'm' | 'h' | 'd'
-  }[]
+  timerShortcuts: Shortcut[]
 }
