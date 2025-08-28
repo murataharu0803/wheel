@@ -16,19 +16,21 @@ import {
   verticalListSortingStrategy,
 } from '@dnd-kit/sortable'
 import { CSS } from '@dnd-kit/utilities'
-import { Box, Button, Flex } from '@mantine/core'
+import { ActionIcon, Center, Flex } from '@mantine/core'
 import React from 'react'
 
-import handleSvg from '@/frontend/assets/handle.svg'
+import { IconGripVertical, IconPlus, IconTrash } from '@tabler/icons-react'
 
 interface RowItemProps {
   id: string
+  editable: boolean
   children: React.ReactNode
   onDelete: () => void
 }
 
 const RowItem: React.FC<RowItemProps> = ({
   id,
+  editable,
   children,
   onDelete,
 }) => {
@@ -49,15 +51,16 @@ const RowItem: React.FC<RowItemProps> = ({
   return <Flex
     gap="xs"
     justify="stretch"
+    align="center"
     my="xs"
     ref={setNodeRef}
-    align="center"
     style={style}
     {...attributes}
   >
-    <Box ref={setActivatorNodeRef} {...listeners}>{handleSvg}</Box>
+    {editable && <Center ref={setActivatorNodeRef} {...listeners} style={{ pointer: 'grab' }}>
+      <IconGripVertical size="16" /></Center>}
     {children}
-    <Button size="xs" onClick={onDelete}>x</Button>
+    {editable && <ActionIcon color="red" onClick={onDelete}><IconTrash size="16" /></ActionIcon>}
   </Flex>
 }
 
@@ -65,6 +68,7 @@ interface SortableRowsProps<T extends { id: string } = Record<string, any> & { i
   row: (_: T, __: (_: Partial<T>) =>  void) => React.ReactNode
   data: T[]
   setData: React.Dispatch<React.SetStateAction<T[]>>
+  editable?: boolean
   defaultItem: Omit<T, 'id'>
 }
 
@@ -72,6 +76,7 @@ const SortableRows = <T extends { id: string } = Record<string, any> & { id: str
   row,
   data,
   setData,
+  editable = false,
   defaultItem
 }: SortableRowsProps<T>) => {
   const sensors = useSensors(useSensor(PointerSensor))
@@ -106,18 +111,18 @@ const SortableRows = <T extends { id: string } = Record<string, any> & { id: str
         strategy={verticalListSortingStrategy}
       >
         {data.map(d => {
-          return <RowItem key={d.id} id={d.id} onDelete={getDelete(d.id)}>
+          return <RowItem key={d.id} id={d.id} editable={editable} onDelete={getDelete(d.id)}>
             {row(d, getSetItem(d.id))}
           </RowItem>
         })}
       </SortableContext>
     </DndContext>
-    <Button w="100%" size="xs" onClick={() => {
+    {editable && <ActionIcon w="100%" variant="outline" size="lg" onClick={() => {
       setData(items => [
         ...items,
         { ...defaultItem, id: Math.random().toString(36).substring(2, 9) } as T,
       ])
-    }}>+</Button>
+    }}><IconPlus size="16" /></ActionIcon>}
   </>
 }
 

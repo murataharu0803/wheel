@@ -8,10 +8,15 @@ import WheelConfig, { WheelOption } from '@/types/WheelConfig'
 
 interface WheelProps {
   configOverride?: WheelConfig
+  isPreview?: boolean
   onResult?: (_: WheelOption) => void
 }
 
-const Wheel: React.FC<WheelProps> = ({ configOverride, onResult = () => {} }) => {
+const Wheel: React.FC<WheelProps> = ({
+  configOverride,
+  isPreview = false,
+  onResult = () => {},
+}) => {
   const { config, socket } = useContext(WheelContext)
 
   const isSpinning = useRef(false)
@@ -35,14 +40,8 @@ const Wheel: React.FC<WheelProps> = ({ configOverride, onResult = () => {} }) =>
     indicatorColor,
   } = configOverride || config
 
-  const thick = donutThickness || 0
+  const thick = donutThickness || radius
   const sectorOptions = optionMapper(options)
-
-  const spin = useCallback(async(option: WheelOption) => {
-    setTimeout(() => {
-      onResult(option)
-    }, 500)
-  }, [onResult])
 
   const spinAngle = useCallback(async(angle: number) => {
     if (isSpinning.current) return
@@ -58,7 +57,7 @@ const Wheel: React.FC<WheelProps> = ({ configOverride, onResult = () => {} }) =>
   useEffect(() => {
     const onSpin = (option: WheelOption) => {
       console.log('[spin]', option)
-      spin(option)
+      if (!isPreview) setTimeout(() => { onResult(option) }, 500)
     }
     const onSpinAngle = (angle: number) => {
       console.log('[spinAngle]', angle)
@@ -68,16 +67,23 @@ const Wheel: React.FC<WheelProps> = ({ configOverride, onResult = () => {} }) =>
       console.log('[spinAngleInit]', angle)
       setWheelPosition(angle)
     }
+    const onSpinTest = (angle: number) => {
+      console.log('[spinTest]', angle)
+      if (isPreview) spinAngle(angle)
+      else setWheelPosition(angle)
+    }
 
     socket?.on('spinAngleInit', onSpinAngleInit)
-    socket?.on('spinAngle', onSpinAngle)
     socket?.on('spin', onSpin)
+    socket?.on('spinAngle', onSpinAngle)
+    socket?.on('spinTest', onSpinTest)
     return () => {
+      socket?.off('spinAngleInit', onSpinAngleInit)
       socket?.off('spin', onSpin)
       socket?.off('spinAngle', onSpinAngle)
-      socket?.off('spinAngleInit', onSpinAngleInit)
+      socket?.off('spinTest', onSpinTest)
     }
-  }, [socket, spin, spinAngle])
+  }, [isPreview, onResult, socket, spinAngle])
 
   return <svg
     width={radius * 2 + 100}
@@ -105,11 +111,13 @@ const Wheel: React.FC<WheelProps> = ({ configOverride, onResult = () => {} }) =>
         <text
           x={labelAlign === 'out' ? radius - labelMargin : radius - thick + labelMargin}
           y={0}
-          textAnchor="end"
+          textAnchor={labelAlign === 'out' ? 'end' : 'start'}
+          dominantBaseline="central"
           style={{
             textAlign: 'left',
             transform: `rotate(${(o.startAngle + o.endAngle) / 2}rad)`,
             ...labelStyle,
+            fill: labelStyle.color,
           }}
         >{o.label}</text>
       </g>)}
@@ -130,7 +138,7 @@ const Wheel: React.FC<WheelProps> = ({ configOverride, onResult = () => {} }) =>
       textAnchor='middle'
       x={0}
       y={0}
-      style={{ ...centerLabelStyle }}
+      style={{ ...centerLabelStyle, fill: centerLabelStyle.color }}
       dominantBaseline="central"
     >
       {centerLabel}

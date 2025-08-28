@@ -1,4 +1,5 @@
 import {
+  Anchor,
   AngleSlider,
   Box,
   Button,
@@ -7,56 +8,40 @@ import {
   Container,
   Flex,
   Group,
+  InputLabel,
+  LoadingOverlay,
+  RangeSlider,
   Slider,
+  Space,
+  Stack,
   Switch,
   TextInput,
   Title,
 } from '@mantine/core'
-import React, { useContext, useState } from 'react'
+import { notifications, Notifications } from '@mantine/notifications'
+import React, { useContext, useEffect, useRef, useState } from 'react'
 
+import DashboardSection from '@/frontend/components/DashboardSection'
+import FontOption from '@/frontend/components/FontOption'
 import ShortcutItem from '@/frontend/components/ShortcutItem'
 import SortableRows from '@/frontend/components/SortableRows'
 import Timer from '@/frontend/components/Timer'
 import Wheel from '@/frontend/components/Wheel'
 import WheelOptionItem from '@/frontend/components/WheelOptionItem'
 import WheelContext from '@/frontend/context/WheelContext'
-import { randomId } from '@/utils/random'
+import useConfigState from '@/frontend/hooks/useConfigState'
 
-import WheelConfig, { FontStyle, Shortcut as ShortcutType, WheelOption } from '@/types/WheelConfig'
+import { Shortcut as ShortcutType, WheelOption } from '@/types/WheelConfig'
+import { useDisclosure } from '@mantine/hooks'
 
 const Dashboard: React.FC = () => {
   const { config, socket } = useContext(WheelContext)
 
-  const [timerShortcuts, setTimerShortcuts] = useState(
-    config.timerShortcuts.map(s => ({ ...s, id: randomId() })))
-  const [options, setOptions] = useState(
-    config.options.map(o => ({ ...o, id: randomId() })))
-
-  const [spinDuration, setSpinDuration] = useState(config.spinDuration)
-  const [spinTimingFunction, setSpinTimingFunction] = useState(config.spinTimingFunction)
-  const [radius, setRadius] = useState<number>(config.radius)
-  const [strokeWidth, setStrokeWidth] = useState<number>(config.strokeWidth)
-  const [strokeColor, setStrokeColor] = useState<string>(config.strokeColor)
-  const [donutThickness, setDonutThickness] = useState<number | null>(config.donutThickness)
-
-  const [labelStyle, setLabelStyle] = useState<FontStyle>(config.labelStyle)
-  const [labelAlign, setLabelAlign] = useState<'in' | 'out'>(config.labelAlign)
-  const [labelMargin, setLabelMargin] = useState<number>(config.labelMargin)
-
-  const [centerLabel, setCenterLabel] = useState<string>(config.centerLabel)
-  const [centerLabelStyle, setCenterLabelStyle] = useState<FontStyle>(config.centerLabelStyle)
-
-  const [indicatorPosition, setIndicatorPosition] = useState<number>(config.indicatorPosition)
-  const [indicatorColor, setIndicatorColor] = useState<string>(config.indicatorColor)
-
-  const [timerDisplayMs, setTimerDisplayMs] = useState<boolean>(config.timerDisplayMs)
-  const [timerDisplayDay, setTimerDisplayDay] = useState<boolean>(config.timerDisplayDay)
-  const [timerDigitStyle, setTimerDigitStyle] = useState<FontStyle>(config.timerDigitStyle)
-
-  const [spinDisabled, setSpinDisabled] = useState(false)
-  const curConfig: WheelConfig = {
+  const { configState: editingConfig, set } = useConfigState(config)
+  const {
+    timerShortcuts,
     options,
-    spinDuration: config.spinDuration,
+    spinDuration,
     spinTimingFunction,
     radius,
     strokeWidth,
@@ -72,16 +57,22 @@ const Dashboard: React.FC = () => {
     timerDisplayMs,
     timerDisplayDay,
     timerDigitStyle,
-    timerShortcuts,
-  }
+  } = editingConfig
+
+  const [spinDisabled, setSpinDisabled] = useState(false)
+  const [preview, setPreview] = useState(false)
+  const [saving, setSaving] = useState(true)
+  const [visible, { toggle }] = useDisclosure(true)
+  const isVisible = useRef(true)
 
   const spin = () => {
     setSpinDisabled(true)
-    console.log('<spin>')
-    socket?.emit('spin')
+    console.log(preview ? '<spinTest>' : '<spin>')
+    if (preview) socket?.emit('spinTest', spinDuration)
+    else socket?.emit('spin')
     setTimeout(() => {
       setSpinDisabled(false)
-    }, config.spinDuration * 1000 + 500)
+    }, spinDuration * 1000 + 500)
   }
 
   const resume = () => {
@@ -99,129 +90,227 @@ const Dashboard: React.FC = () => {
     socket?.emit('reset')
   }
 
+  const save = () => {
+    console.log('<save>', editingConfig)
+    setSaving(true)
+    socket?.emit('updateConfig', editingConfig)
+  }
+
+  const onSpin = (option: WheelOption) => {
+    notifications.show({
+      title: '轉盤結果',
+      message: `轉到「${option.label}」!`,
+      color: 'green',
+      autoClose: 2000,
+    })
+  }
+
+  useEffect(() => {
+    const onConnect = () => {
+      notifications.show({
+        title: 'Web Socket 連線',
+        message: '已連線到伺服器。',
+        color: 'green',
+        autoClose: 2000,
+      })
+    }
+
+    const onDisconnect = () => {
+      notifications.show({
+        title: 'Web Socket 連線',
+        message: '已與伺服器斷線。',
+        color: 'red',
+        autoClose: 5000,
+      })
+    }
+
+    const onUpdateConfig = () => {
+      if (isVisible.current) toggle()
+      isVisible.current = false
+      setSaving(false)
+      notifications.show({
+        title: '設定更新',
+        message: '轉盤設定已更新。',
+        color: 'blue',
+        autoClose: 2000,
+      })
+    }
+
+    socket?.on('connect', onConnect)
+    socket?.on('disconnect', onDisconnect)
+    socket?.on('updateConfig', onUpdateConfig)
+
+    return () => {
+      socket?.off('connect', onConnect)
+      socket?.off('disconnect', onDisconnect)
+      socket?.off('updateConfig', onUpdateConfig)
+    }
+  }, [socket, toggle])
+
   return <Flex w="100%" h="100dvh" style={{ overflow: 'hidden' }}>
-    <Center h="100dvh"
-      flex="1 0 0"
+    <LoadingOverlay visible={visible} zIndex={1000} overlayProps={{ blur: 2 }} />
+    <Center h="100dvh" flex="1 0 0" pos="relative"
       style={{ flexDirection: 'column', overflow: 'hidden' }}>
-      <Wheel configOverride={curConfig} />
-      <Timer />
+      <Wheel configOverride={preview ? editingConfig : config}
+        isPreview={preview} onResult={onSpin}/>
+      <Timer configOverride={preview ? editingConfig : config} />
+      <Group right="1rem" bottom="1rem" pos="absolute">
+        <Switch size="lg" checked={preview} onLabel="預覽" offLabel="顯示"
+          onChange={e => setPreview(e.currentTarget.checked)} />
+        <Button flex={1} onClick={save} disabled={saving}>儲存並套用設定</Button>
+      </Group>
     </Center>
     <Box h="100dvh" flex="0 0 500px" style={{ overflow: 'auto' }}>
-      <Container p="xs">
+      <Container px="md" py="xl">
 
         <Title order={2} mt="xl" mb="sm">轉盤儀表版</Title>
         <Group gap="xs" justify="stretch" preventGrowOverflow={false}>
-          <Button flex={1} onClick={spin} disabled={spinDisabled}>轉一次！</Button>
+          <Button flex={1} onClick={spin} color="green"
+            variant={preview ? 'outline' : 'filled'} disabled={spinDisabled}>
+            {preview ? '測試轉盤' : '轉一次！'}
+          </Button>
           <Button flex={1} onClick={resume}>繼續</Button>
           <Button flex={1} onClick={pause}>暫停</Button>
-          <Button flex={1} onClick={reset}>重置</Button>
+          <Button flex={1} color="red" onClick={reset}>重置</Button>
         </Group>
 
-        <Title order={3} mt="xl" mb="sm">計時器操作</Title>
-        <SortableRows<ShortcutType & { id: string }>
-          data={timerShortcuts}
-          setData={setTimerShortcuts}
-          defaultItem={{ amount: 1, unit: 'm' }}
-          row={(shortcut, setShortcut) => <ShortcutItem
-            shortcut={shortcut}
-            setShortcut={setShortcut}
-            onUpdate={value => socket?.emit('updateTimer', value)}
+        <DashboardSection
+          title="計時器操作"
+          isEditable={true}
+          content={editable => <SortableRows<ShortcutType & { id: string }>
+            data={timerShortcuts}
+            setData={set.timerShortcuts}
+            editable={editable}
+            defaultItem={{ amount: 1, unit: 'm' }}
+            row={(shortcut, setShortcut) => <ShortcutItem
+              shortcut={shortcut}
+              setShortcut={setShortcut}
+              onUpdate={value => socket?.emit('updateTimer', value)}
+            />}
           />}
         />
 
-        <Title order={3} mt="xl" mb="sm">轉盤選項</Title>
-        <SortableRows<WheelOption & { id: string }>
-          data={options}
-          setData={setOptions}
-          defaultItem={{
-            label: '新選項',
-            weight: 1,
-            value: 1,
-            unit: 'm',
-            color: 'white',
-          }}
-          row={(option, setOption) => <WheelOptionItem
-            wheelOption={option}
-            setWheelOption={setOption}
+        <DashboardSection
+          title="轉盤選項"
+          isEditable={preview}
+          content={editable => <SortableRows<WheelOption & { id: string }>
+            data={options}
+            setData={set.options}
+            editable={editable}
+            defaultItem={{
+              label: '新選項',
+              weight: 1,
+              value: 1,
+              unit: 'm',
+              color: 'white',
+            }}
+            row={(option, setOption) => <WheelOptionItem
+              wheelOption={option}
+              setWheelOption={setOption}
+            />}
           />}
         />
 
-        <Title order={3} mt="xl" mb="sm">轉盤樣式</Title>
-        <Slider value={spinDuration} onChange={setSpinDuration} min={1} max={15} step={0.5}/>
-        <TextInput value={spinTimingFunction}
-          onChange={e => setSpinTimingFunction(e.currentTarget.value)} />
-        <Slider value={radius} onChange={setRadius} min={200} max={800} step={50} />
-        <Slider value={strokeWidth} onChange={setStrokeWidth} min={0} max={10} step={0.25} />
-        <ColorInput value={strokeColor} onChange={setStrokeColor} />
-        <Slider value={donutThickness || radius} onChange={setDonutThickness}
-          min={25} max={radius} step={25} />
-
-        <Title order={3} mt="xl" mb="sm">標籤樣式</Title>
-        <TextInput value={centerLabel} onChange={e => setCenterLabel(e.currentTarget.value)} />
-
-        <ColorInput value={centerLabelStyle.color}
-          onChange={color => setCenterLabelStyle({ ...centerLabelStyle, color })} />
-        <TextInput value={centerLabelStyle.fontFamily}
-          onChange={e => setCenterLabelStyle({
-            ...centerLabelStyle,
-            fontFamily: e.currentTarget.value,
-          })}
+        <DashboardSection
+          title="轉盤樣式"
+          defaultCollapsed={true}
+          content={() => <>
+            <Group my="sm">
+              <TextInput label="動畫函數" value={spinTimingFunction} w="120px"
+                onChange={e => set.spinTimingFunction(e.currentTarget.value)} />
+              <Stack flex="1 0 0">
+                <InputLabel>動畫時間</InputLabel>
+                <Slider value={spinDuration} w="100%"
+                  onChange={set.spinDuration} min={1} max={15} step={0.5}/>
+              </Stack>
+            </Group>
+            <Stack flex="1 0 0" my="sm">
+              <InputLabel>半徑與厚度</InputLabel>
+              <RangeSlider
+                value={[radius - (donutThickness || radius), radius]}
+                onChange={([i, o]) => {
+                  set.radius(o)
+                  set.donutThickness(o - i)
+                }}
+                min={0} max={800} step={25}
+              />
+            </Stack>
+            <Group my="sm">
+              <Stack flex="1 0 0">
+                <InputLabel>邊框厚度</InputLabel>
+                <Slider
+                  value={strokeWidth} onChange={set.strokeWidth}
+                  min={0} max={10} step={0.25}
+                />
+              </Stack>
+              <ColorInput label="邊框顏色" w="120px"
+                value={strokeColor} onChange={set.strokeColor} />
+            </Group>
+          </>}
         />
-        <Slider value={centerLabelStyle.fontSize}
-          onChange={fontSize => setCenterLabelStyle({ ...centerLabelStyle, fontSize })}
-          min={6} max={48} step={1} />
-        <TextInput value={centerLabelStyle.fontWeight}
-          onChange={e => setCenterLabelStyle({
-            ...centerLabelStyle,
-            fontWeight: e.currentTarget.value,
-          })}
+
+        <DashboardSection
+          title="標籤樣式"
+          defaultCollapsed={true}
+          content={() => <Stack>
+            <Group>
+              <InputLabel>中心標籤文字</InputLabel>
+              <TextInput value={centerLabel} flex="1 0 0"
+                onChange={e => set.centerLabel(e.currentTarget.value)} />
+            </Group>
+            <FontOption style={centerLabelStyle} onChange={set.centerLabelStyle} />
+            <InputLabel>選項標籤文字</InputLabel>
+            <FontOption style={labelStyle} onChange={set.labelStyle} />
+            <Group>
+              <Switch size="lg" checked={labelAlign === 'out'} onLabel="靠內" offLabel="靠外"
+                onChange={e => set.labelAlign(e.currentTarget.checked ? 'out' : 'in')} />
+              <Slider flex="1 0 0"
+                value={labelMargin} onChange={set.labelMargin}
+                min={4} max={radius - 40} step={4}
+              />
+            </Group>
+          </Stack>}
         />
 
-        <ColorInput value={labelStyle.color}
-          onChange={color => setLabelStyle({ ...labelStyle, color })} />
-        <TextInput value={labelStyle.fontFamily}
-          onChange={e => setLabelStyle({ ...labelStyle, fontFamily: e.currentTarget.value })} />
-        <Slider value={labelStyle.fontSize}
-          onChange={fontSize => setLabelStyle({ ...labelStyle, fontSize })}
-          min={6} max={48} step={1} />
-        <TextInput value={labelStyle.fontWeight}
-          onChange={e => setLabelStyle({ ...labelStyle, fontWeight: e.currentTarget.value })} />
-
-        <Switch checked={labelAlign === 'out'} size="xs" onLabel="in" offLabel="out"
-          onChange={e => setLabelAlign(e.currentTarget.checked ? 'out' : 'in')} />
-        <Slider value={labelMargin} onChange={setLabelMargin} min={4} max={radius - 50} step={4} />
-
-        <Title order={3} mt="xl" mb="sm">指針樣式</Title>
-        <AngleSlider value={indicatorPosition + 90}
-          onChange={a => setIndicatorPosition(a - 90)}
-          formatLabel={value => `${(value + 270) % 360}°`}/>
-        <ColorInput value={indicatorColor} onChange={setIndicatorColor} />
-
-        <Title order={3} mt="xl" mb="sm">計時器樣式</Title>
-        <Switch checked={timerDisplayMs} size="xs"
-          onChange={e => setTimerDisplayMs(e.currentTarget.checked)} />
-        <Switch checked={timerDisplayDay} size="xs"
-          onChange={e => setTimerDisplayDay(e.currentTarget.checked)} />
-
-        <ColorInput value={timerDigitStyle.color}
-          onChange={color => setTimerDigitStyle({ ...timerDigitStyle, color })} />
-        <TextInput value={timerDigitStyle.fontFamily}
-          onChange={e => setTimerDigitStyle({
-            ...timerDigitStyle,
-            fontFamily: e.currentTarget.value,
-          })}
+        <DashboardSection
+          title="指針樣式"
+          defaultCollapsed={true}
+          content={() => <Group>
+            <AngleSlider value={indicatorPosition + 90}
+              onChange={a => set.indicatorPosition(a - 90)}
+              formatLabel={value => `${(value + 270) % 360}°`}/>
+            <ColorInput w="100px" value={indicatorColor} onChange={set.indicatorColor} />
+          </Group>}
         />
-        <Slider value={timerDigitStyle.fontSize}
-          onChange={fontSize => setTimerDigitStyle({ ...timerDigitStyle, fontSize })}
-          min={6} max={48} step={1} />
-        <TextInput value={timerDigitStyle.fontWeight}
-          onChange={e => setTimerDigitStyle({
-            ...timerDigitStyle,
-            fontWeight: e.currentTarget.value,
-          })}
+
+        <DashboardSection
+          title="計時器樣式"
+          defaultCollapsed={true}
+          content={() => <Stack>
+            <Group>
+              <Switch size="lg" checked={timerDisplayMs} label="顯示毫秒"
+                onChange={e => set.timerDisplayMs(e.currentTarget.checked)} />
+              <Switch size="lg" checked={timerDisplayDay} label="顯示天數"
+                onChange={e => set.timerDisplayDay(e.currentTarget.checked)} />
+            </Group>
+            <FontOption style={timerDigitStyle} onChange={set.timerDigitStyle} />
+          </Stack>}
         />
+
+        <Space h="xl" />
+
+        <Center>
+          由
+          <Anchor href="https://github.com/kami-0121">神の反逆者</Anchor>
+          與
+          <Anchor href="https://github.com/murataharu0803">村田ハル</Anchor>
+          制作
+        </Center>
+
+        <Space h="xl" />
       </Container>
     </Box>
+    <Notifications position="top-left"/>
   </Flex>
 }
 

@@ -5,8 +5,13 @@ import React, { useContext, useEffect, useRef, useState } from 'react'
 import WheelContext from '@/frontend/context/WheelContext'
 
 import TimerData from '@/types/TimerData'
+import WheelConfig from '@/types/WheelConfig'
 
-const Timer: React.FC = () => {
+interface TimerProps {
+  configOverride?: WheelConfig
+}
+
+const Timer: React.FC<TimerProps> = ({ configOverride }) => {
   const { config, socket } = useContext(WheelContext)
 
   const [timeLeft, setTimeLeft] = useState(0)
@@ -19,7 +24,7 @@ const Timer: React.FC = () => {
     timerDisplayDay,
     timerDisplayMs,
     timerDigitStyle,
-  } = config
+  } = configOverride || config
 
   const d = timerDisplayDay ? Math.floor(timeLeftDisplay / 86400) : 0
   const h = timerDisplayDay
@@ -68,10 +73,13 @@ const Timer: React.FC = () => {
     setTimeLeftDisplay(timeLeft)
   }, [socket, timeLeft])
 
-  return <Text style={{ ... timerDigitStyle }}>
+  const displayDay = timerDisplayDay && !!d
+
+  return <Text style={timerDigitStyle}>
     <NumberFlowGroup>
-      {timerDisplayDay &&
+      {displayDay &&
         <NumberFlow
+          suffix="天 "
           trend={trend}
           value={d}
           format={{ minimumIntegerDigits: 1 }}
@@ -80,7 +88,7 @@ const Timer: React.FC = () => {
       <NumberFlow
         trend={trend}
         value={h}
-        format={{ minimumIntegerDigits: 2 }}
+        format={{ minimumIntegerDigits: displayDay ? 2 : 1 }}
       />
       <NumberFlow
         prefix=":"

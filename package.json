@@ -18,6 +18,7 @@
     "@mantine/charts": "^8.2.7",
     "@mantine/notifications": "^8.2.7",
     "@number-flow/react": "^0.5.10",
+    "@tabler/icons-react": "^3.34.1",
     "bun": "^1.2.20",
     "express": "^5.1.0",
     "luxon": "^3.7.1",

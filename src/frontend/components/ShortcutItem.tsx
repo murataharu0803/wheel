@@ -1,9 +1,10 @@
-import { Button, NumberInput, Select } from '@mantine/core'
+import { ActionIcon, NumberInput, Select } from '@mantine/core'
 import React from 'react'
 
 import { fromUnitToSeconds } from '@/utils/time'
 
 import { Shortcut as ShortcutType, TimeUnit } from '@/types/WheelConfig'
+import { IconMinus, IconPlus } from '@tabler/icons-react'
 
 interface ShortcutItemProps {
   shortcut: ShortcutType & { id: string }
@@ -17,7 +18,7 @@ const ShortcutItem: React.FC<ShortcutItemProps> = (
   const { amount, unit } = shortcut
   const value = fromUnitToSeconds(amount, unit)
   return <>
-    <Button size="xs" onClick={() => { onUpdate(-value) }}>-</Button>
+    <ActionIcon onClick={() => { onUpdate(-value) }}><IconMinus size="16" /></ActionIcon>
     <NumberInput
       flex="1 0 0"
       size="xs"
@@ -41,7 +42,7 @@ const ShortcutItem: React.FC<ShortcutItemProps> = (
         { label: '秒', value: 's' },
       ] as { label: string, value: TimeUnit }[]}
     />
-    <Button size="xs" onClick={() => { onUpdate(value) }}>+</Button>
+    <ActionIcon onClick={() => { onUpdate(value) }}><IconPlus size="16" /></ActionIcon>
   </>
 }
 

@@ -9,7 +9,7 @@ import console, { logger } from '@/logger'
 import { R_360 } from '@/utils/svg'
 import { fromUnitToSeconds } from '@/utils/time'
 
-import { WheelOption } from '@/types/WheelConfig'
+import WheelConfig, { WheelOption } from '@/types/WheelConfig'
 
 const app: Express = express()
 
@@ -45,10 +45,10 @@ io.on('connection', async socket => {
     console.log('Disconnected.')
   })
 
-  socket.on('updateConfig', async cfg => {
-    console.log('[updateConfig]', cfg)
+  socket.on('updateConfig', async(cfg: WheelConfig) => {
+    console.log('[updateConfig]', JSON.stringify(cfg))
     const config = await readConfig()
-    const newConfig = { config, ...cfg }
+    const newConfig: WheelConfig = { ...config, ...cfg }
     await writeConfig(newConfig)
     emit(io, 'updateConfig', newConfig)
   })
@@ -134,6 +134,13 @@ io.on('connection', async socket => {
       emit(io, 'updateTimer', newTimer)
       isSpinning = false
     }, spinDuration * 1000 + 500)
+  })
+
+  socket.on('spinTest', async duration => {
+    console.log('[spinTest]')
+    const targetAngle = wheelAngle + duration * 4
+    wheelAngle = targetAngle
+    emit(io, 'spinTest', targetAngle)
   })
 })
 

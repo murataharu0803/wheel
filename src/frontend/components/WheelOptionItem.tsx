@@ -20,6 +20,7 @@ const WheelOptionItem: React.FC<WheelOptionItemProps> = (
       onChange={value => setWheelOption({ label: value.currentTarget.value })}
     />
     <NumberInput
+      w="75px"
       size="xs"
       value={weight}
       min={1}
@@ -29,6 +30,7 @@ const WheelOptionItem: React.FC<WheelOptionItemProps> = (
     />
     <NumberInput
       size="xs"
+      w="75px"
       value={value}
       min={1}
       max={999999}
@@ -36,7 +38,7 @@ const WheelOptionItem: React.FC<WheelOptionItemProps> = (
       onChange={v => setWheelOption({ value: Number(v) || 0 })}
     />
     <Select
-      flex="1 0 0"
+      w="50px"
       size="xs"
       value={unit}
       onChange={value => setWheelOption({ unit: value as TimeUnit })}
@@ -50,7 +52,7 @@ const WheelOptionItem: React.FC<WheelOptionItemProps> = (
       ] as { label: string, value: TimeUnit }[]}
     />
     <ColorInput
-      flex="1 0 0"
+      w="100px"
       size="xs"
       value={color}
       onChange={value => setWheelOption({ color: value })}
